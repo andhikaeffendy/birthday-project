@@ -1,0 +1,46 @@
+name: Deploy to Vercel (main)
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel
+
+      - name: Deploy to Vercel (Production)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG: ${{ secrets.VERCEL_ORG }}
+          VERCEL_PROJECT: ${{ secrets.VERCEL_PROJECT }}
+        run: |
+          if [ -z "$VERCEL_PROJECT" ]; then
+            PROJECT_NAME=birthday-project
+          else
+            PROJECT_NAME=$VERCEL_PROJECT
+          fi
+          if [ -z "$VERCEL_ORG" ]; then
+            vercel deploy ./out --prod --yes --token "$VERCEL_TOKEN" --name "$PROJECT_NAME"
+          else
+            vercel deploy ./out --prod --yes --token "$VERCEL_TOKEN" --name "$PROJECT_NAME" --scope "$VERCEL_ORG"
+          fi
+
