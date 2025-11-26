@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 declare global {
   interface Window {
@@ -19,6 +19,8 @@ export default function MusicPlayer() {
   const [videoId, setVideoId] = useState<string>("FjHGZj2IjBk");
   const [start, setStart] = useState<number>(0);
   const [muted, setMuted] = useState<boolean>(true);
+  const [mode, setMode] = useState<"local" | "youtube">("local");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     localStorage.setItem("music:auto", playing ? "on" : "off");
@@ -27,12 +29,17 @@ export default function MusicPlayer() {
   const url = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&rel=0&loop=1&playlist=${videoId}&start=${start}&mute=${
     muted ? 1 : 0
   }`;
+  const audioSrc = "/assets/music/main-menu.mp3";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.__musicPlay = () => {
       setPlaying(true);
       setMuted(false);
+      if (mode === "local" && audioRef.current) {
+        audioRef.current.muted = false;
+        audioRef.current.play().catch(() => {});
+      }
     };
     window.__musicStop = () => setPlaying(false);
     window.__musicSet = (vid?: string, st?: number) => {
@@ -41,6 +48,9 @@ export default function MusicPlayer() {
     };
     const unmute: EventListener = () => {
       setMuted(false);
+      if (mode === "local" && audioRef.current) {
+        audioRef.current.muted = false;
+      }
     };
     window.addEventListener("pointerdown", unmute, { once: true });
     window.addEventListener("touchstart", unmute, { once: true });
@@ -53,8 +63,33 @@ export default function MusicPlayer() {
       window.removeEventListener("touchstart", unmute);
       window.removeEventListener("keydown", unmute);
     };
-  }, []);
+  }, [mode]);
 
+  useEffect(() => {
+    if (mode !== "local") return;
+    if (!audioRef.current) return;
+    audioRef.current.loop = true;
+    audioRef.current.muted = muted;
+    if (playing) {
+      audioRef.current.play().catch(() => {});
+    } else {
+      audioRef.current.pause();
+    }
+  }, [mode, playing, muted]);
+
+  if (mode === "local") {
+    return (
+      <audio
+        ref={audioRef}
+        src={audioSrc}
+        autoPlay
+        muted
+        loop
+        style={{ display: "none" }}
+        onError={() => setMode("youtube")}
+      />
+    );
+  }
   return playing ? (
     <iframe
       key={`${videoId}-${start}-${playing ? 1 : 0}`}
