@@ -19,8 +19,13 @@ export default function MusicPlayer() {
   const [videoId, setVideoId] = useState<string>("FjHGZj2IjBk");
   const [start, setStart] = useState<number>(0);
   const [muted, setMuted] = useState<boolean>(true);
-  const [mode, setMode] = useState<"local" | "youtube">("local");
+  const [mode, setMode] = useState<"local" | "youtube">("youtube");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const localMap: Record<string, string> = {
+    FjHGZj2IjBk: "/assets/music/main-menu.mp3",
+    s6oZ6LJeDws: "/assets/music/story-128.mp3",
+  };
+  const [audioSrc, setAudioSrc] = useState<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem("music:auto", playing ? "on" : "off");
@@ -29,7 +34,7 @@ export default function MusicPlayer() {
   const url = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&rel=0&loop=1&playlist=${videoId}&start=${start}&mute=${
     muted ? 1 : 0
   }`;
-  const audioSrc = "/assets/music/main-menu.mp3";
+  // dynamic audio source based on video id; set via __musicSet
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -43,8 +48,17 @@ export default function MusicPlayer() {
     };
     window.__musicStop = () => setPlaying(false);
     window.__musicSet = (vid?: string, st?: number) => {
-      if (vid) setVideoId(vid);
-      if (typeof st === "number") setStart(st);
+      if (vid && localMap[vid]) {
+        setMode("local");
+        setAudioSrc(localMap[vid]);
+        if (typeof st === "number" && audioRef.current) {
+          audioRef.current.currentTime = st;
+        }
+      } else {
+        if (vid) setVideoId(vid);
+        if (typeof st === "number") setStart(st);
+        setMode("youtube");
+      }
     };
     const unmute: EventListener = () => {
       setMuted(false);
@@ -77,7 +91,7 @@ export default function MusicPlayer() {
     }
   }, [mode, playing, muted]);
 
-  if (mode === "local") {
+  if (mode === "local" && audioSrc) {
     return (
       <audio
         ref={audioRef}
