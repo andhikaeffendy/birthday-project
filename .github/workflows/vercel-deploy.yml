@@ -29,18 +29,7 @@ jobs:
 
       - name: Deploy to Vercel (Production)
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG: ${{ secrets.VERCEL_ORG }}
-          VERCEL_PROJECT: ${{ secrets.VERCEL_PROJECT }}
+          VERCEL_TOKEN: ${{ secrets.birthday_secret }}
         run: |
-          if [ -z "$VERCEL_PROJECT" ]; then
-            PROJECT_NAME=birthday-project
-          else
-            PROJECT_NAME=$VERCEL_PROJECT
-          fi
-          if [ -z "$VERCEL_ORG" ]; then
-            vercel deploy ./out --prod --yes --token "$VERCEL_TOKEN" --name "$PROJECT_NAME"
-          else
-            vercel deploy ./out --prod --yes --token "$VERCEL_TOKEN" --name "$PROJECT_NAME" --scope "$VERCEL_ORG"
-          fi
-
+          PROJECT_NAME=birthday-project
+          vercel deploy ./out --prod --yes --token "$VERCEL_TOKEN" --name "$PROJECT_NAME"
