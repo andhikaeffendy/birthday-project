@@ -25,10 +25,6 @@ export default function Level4Page() {
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const [gameOver, setGameOver] = useState<boolean>(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
-  const [lastAction, setLastAction] = useState<"wrong" | "reset" | null>(null);
-  const prevHearts = useRef<number>(hearts);
-  const prevWrong = useRef<number>(wrongCount);
-  const [pulseOk, setPulseOk] = useState<string[]>([]);
 
   const targets = useMemo<Rect[]>(
     () => [
@@ -53,14 +49,6 @@ export default function Level4Page() {
       return () => clearTimeout(t);
     }
   }, [selectedIds]);
-
-  useEffect(() => {
-    prevHearts.current = hearts;
-  }, [hearts]);
-
-  useEffect(() => {
-    prevWrong.current = wrongCount;
-  }, [wrongCount]);
 
   const inRect = (xPct: number, yPct: number, r: Rect) => {
     return (
@@ -112,7 +100,8 @@ export default function Level4Page() {
         ]);
       }
     } else {
-      setMarks((prev) => [...prev, { x, y, kind: "bad" }]);
+      setMarks([{ x, y, kind: "bad" }]);
+      setSelectedIds([]);
       setWrongCount((w) => {
         const next = w + 1;
         if (next >= 3) {
@@ -121,7 +110,6 @@ export default function Level4Page() {
         } else {
           setHearts(() => Math.max(0, 3 - next));
         }
-        setLastAction("wrong");
         return next;
       });
     }
@@ -136,7 +124,6 @@ export default function Level4Page() {
     setShowDetail(false);
     setGameOver(false);
     setHearts(3);
-    setLastAction("reset");
   };
 
   return (
@@ -154,73 +141,31 @@ export default function Level4Page() {
               src={bgSrc}
               alt="Level 4 Background"
               fill
-              className="object-cover"
+              className="object-cover bg-parallax"
               sizes="100vw"
               unoptimized
               onError={() => setBgSrc("/assets/background_duduk.png")}
             />
           </div>
 
-          <div
-            className="absolute left-1/2 -translate-x-1/2 z-20"
-            style={{ top: "max(env(safe-area-inset-top), 8px)" }}
-          >
-            <div className="pointer-events-none flex flex-col items-center gap-1.5">
-              <div className="bg-[#F5D7A1] px-4 py-1.5 rounded-2xl border-[6px] border-[#2A2A2A] shadow-xl animate-in-up">
-                <span
-                  className="font-black tracking-widest"
-                  style={{
-                    fontSize: "clamp(14px, 4.2vw, 22px)",
-                    backgroundImage:
-                      "linear-gradient(180deg, #2A2A2A 0%, #1C1C1C 100%)",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                    color: "transparent",
-                  }}
-                >
-                  LEVEL 4
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+            <div className="bg-[#F5D7A1] px-4 py-1.5 rounded-2xl border-[6px] border-[#2A2A2A] shadow-xl flex items-center gap-3">
+              <span
+                className="font-black text-[#2A2A2A] tracking-widest"
+                style={{ fontSize: "clamp(18px, 5.2vw, 24px)" }}
+              >
+                LEVEL 4
+              </span>
+              <div className="flex items-center gap-1 bg-[#4A3A2A] border-4 border-[#2D2018] px-2 py-0.5 rounded-xl shadow-xl">
+                <Heart size={14} className="text-red-500" fill="currentColor" />
+                <span className="text-[#F5D7A1] font-black text-xs">
+                  {hearts}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <div
-                  key={`try-${wrongCount}`}
-                  className={`bg-[#4A3A2A] border-[3px] sm:border-4 border-[#2D2018] px-2 py-0.5 rounded-xl shadow-xl animate-in-up ${
-                    lastAction === "wrong"
-                      ? "animate-wrong"
-                      : lastAction === "reset"
-                      ? "animate-correct"
-                      : ""
-                  }`}
-                >
-                  <span
-                    className="text-[#F5D7A1] font-black"
-                    style={{ fontSize: "clamp(10px, 2.6vw, 13px)" }}
-                  >
-                    TRY: {Math.max(0, 3 - wrongCount)}
-                  </span>
-                </div>
-                <div
-                  key={`hearts-${hearts}`}
-                  className={`bg-[#4A3A2A] border-[3px] sm:border-4 border-[#2D2018] px-2 py-0.5 rounded-xl shadow-xl animate-in-up ${
-                    lastAction === "wrong"
-                      ? "animate-wrong"
-                      : lastAction === "reset"
-                      ? "animate-correct"
-                      : ""
-                  }`}
-                >
-                  <span
-                    className="text-[#F5D7A1] font-black inline-flex items-center gap-1"
-                    style={{ fontSize: "clamp(10px, 2.6vw, 13px)" }}
-                  >
-                    <Heart
-                      size={12}
-                      className="text-red-500"
-                      fill="currentColor"
-                    />
-                    {hearts}
-                  </span>
-                </div>
+              <div className="bg-[#4A3A2A] border-4 border-[#2D2018] px-2 py-0.5 rounded-xl shadow-xl">
+                <span className="text-[#F5D7A1] font-black text-xs">
+                  TRY: {Math.max(0, 3 - wrongCount)}
+                </span>
               </div>
             </div>
           </div>
@@ -232,13 +177,13 @@ export default function Level4Page() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setHint((v) => !v)}
-                className="btn-cozy shiny-btn bg-[#4A3A2A] border-4 border-[#2D2018] px-8 py-3 rounded-xl text-[#F5D7A1] font-black text-lg"
+                className="bg-[#4A3A2A] border-4 border-[#2D2018] px-8 py-3 rounded-xl text-[#F5D7A1] font-black text-lg"
               >
                 HINT
               </button>
               <button
                 onClick={resetGame}
-                className="btn-cozy shiny-btn bg-[#D97706] border-4 border-[#6B3F1D] px-8 py-3 rounded-xl text-white font-black text-lg"
+                className="bg-[#D97706] border-4 border-[#6B3F1D] px-8 py-3 rounded-xl text-white font-black text-lg"
               >
                 RESET
               </button>
@@ -306,10 +251,6 @@ export default function Level4Page() {
                     ...prev,
                     { x, y, kind: "ok", label: t.id },
                   ]);
-                  setPulseOk((prev) => [...prev, t.id]);
-                  setTimeout(() => {
-                    setPulseOk((prev) => prev.filter((pid) => pid !== t.id));
-                  }, 900);
                 }}
                 className="absolute"
                 style={{
@@ -327,26 +268,6 @@ export default function Level4Page() {
           </div>
 
           <div className="absolute inset-0 pointer-events-none">
-            {pulseOk.map((id) => {
-              const t = targets.find((r) => r.id === id);
-              if (!t) return null;
-              return (
-                <div
-                  key={`okbox-${id}`}
-                  className="absolute rounded-xl animate-correct"
-                  style={{
-                    left: `${t.left}%`,
-                    top: `${t.top}%`,
-                    width: `${t.width}%`,
-                    height: `${t.height}%`,
-                    border: "2px solid rgba(34,197,94,0.8)",
-                    boxShadow: "0 0 12px rgba(34,197,94,0.45)",
-                  }}
-                >
-                  <div className="success-aura" />
-                </div>
-              );
-            })}
             {marks.map((m, i) => (
               <div
                 key={`m-${i}`}
@@ -359,9 +280,7 @@ export default function Level4Page() {
               >
                 <span
                   className={`${
-                    m.kind === "ok"
-                      ? "text-green-500 animate-correct"
-                      : "text-red-500 animate-wrong"
+                    m.kind === "ok" ? "text-green-500" : "text-red-500"
                   }`}
                   style={{
                     fontSize: "28px",
@@ -371,7 +290,6 @@ export default function Level4Page() {
                 >
                   {m.kind === "ok" ? "✓" : "✕"}
                 </span>
-                {m.kind === "ok" && <div className="success-aura" />}
               </div>
             ))}
           </div>
@@ -384,7 +302,7 @@ export default function Level4Page() {
               }}
             >
               <div className="w-full max-w-[420px] px-4 mb-3">
-                <div className="bg-[#FFE8C8] py-4 px-5 rounded-2xl border-[6px] border-[#2A2A2A] shadow-xl text-center animate-in-up">
+                <div className="bg-[#FFE8C8] py-4 px-5 rounded-2xl border-[6px] border-[#2A2A2A] shadow-xl text-center">
                   <h2
                     className="font-questTitle text-[#2A2A2A]"
                     style={{ fontSize: "clamp(16px, 4.6vw, 20px)" }}
@@ -434,7 +352,7 @@ export default function Level4Page() {
               }}
             >
               <div className="w-full max-w-[420px] px-4 mb-3">
-                <div className="bg-red-50 py-4 px-5 rounded-2xl border-[6px] border-red-600 shadow-xl text-center animate-in-up">
+                <div className="bg-red-50 py-4 px-5 rounded-2xl border-[6px] border-red-600 shadow-xl text-center">
                   <h2
                     className="font-questTitle text-red-800"
                     style={{ fontSize: "clamp(16px, 4.6vw, 20px)" }}

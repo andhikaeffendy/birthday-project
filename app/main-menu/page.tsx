@@ -85,7 +85,7 @@ export default function MainMenu() {
                   }}
                   aria-label="Toggle sound"
                   suppressHydrationWarning
-                  className={`relative h-6 w-10 rounded-full border transition-colors ${
+                  className={`relative h-6 w-10 rounded-full border-[2px] transition-colors ${
                     soundOn
                       ? "bg-green-400 border-green-600"
                       : "bg-gray-300 border-gray-500"

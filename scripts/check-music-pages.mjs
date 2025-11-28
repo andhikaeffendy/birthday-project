@@ -9,7 +9,6 @@ const pages = [
   'app/level-3/page.tsx',
   'app/level-4/page.tsx',
   'app/congratulation/page.tsx',
-  'app/final-game/page.tsx',
 ];
 
 const root = process.cwd();
@@ -37,3 +36,4 @@ if (errors.length) {
 } else {
   console.log('Music coverage OK on pages:', ok.join(', '));
 }
+

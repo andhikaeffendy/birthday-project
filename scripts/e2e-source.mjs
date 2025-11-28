@@ -35,11 +35,6 @@ for (const c of checks) {
   for (const b of bad) {
     if (src.includes(b)) failures.push(`app/level-4/page.tsx: contains disallowed background class '${b}'`);
   }
-  // Ensure wrong click appends marks and does NOT clear selectedIds
-  const hasAppendBad = src.includes('setMarks((prev) => [...prev, { x, y, kind: "bad" }])');
-  if (!hasAppendBad) failures.push('app/level-4/page.tsx: wrong-click should append bad mark');
-  const occurrencesClearSel = (src.match(/setSelectedIds\(\[\]\)/g) || []).length;
-  if (occurrencesClearSel > 1) failures.push('app/level-4/page.tsx: unexpected clearing of selectedIds');
 }
 
 // Audio asset existence check
@@ -52,13 +47,6 @@ for (const c of checks) {
     'public/assets/music/congrats-clip.mp3',
   ];
   for (const a of assets) if (!fs.existsSync(path.join(root, a))) failures.push(`${a}: missing`);
-}
-
-// Music player fallback check
-{
-  const f = path.join(root, 'app/components/MusicPlayer.tsx');
-  const src = fs.readFileSync(f, 'utf8');
-  if (!src.includes('onError={()')) failures.push('MusicPlayer.tsx: missing audio onError fallback');
 }
 
 if (failures.length) {

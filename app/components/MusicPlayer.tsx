@@ -112,9 +112,6 @@ export default function MusicPlayer() {
       autoPlay
       muted
       loop
-      onError={() => {
-        setAudioSrc("/assets/music/mainmenu-clip.mp3");
-      }}
       style={{ display: "none" }}
     />
   ) : null;

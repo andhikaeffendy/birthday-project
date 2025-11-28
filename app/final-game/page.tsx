@@ -38,13 +38,6 @@ export default function FinalGamePage() {
   const hearts = heartsData;
   const petals = petalsData;
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.__musicSet) {
-      window.__musicSet("/assets/music/final-theme.mp3", 0);
-      if (window.__musicPlay) window.__musicPlay();
-    }
-  }, []);
-
   const moodStyle = (m: string) => {
     if (m === "golden")
       return {
