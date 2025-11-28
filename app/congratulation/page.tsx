@@ -15,8 +15,8 @@ export default function CongratulationPage() {
   useEffect(() => {
     if (phase !== "power") return;
     const t = setTimeout(() => {
-      router.push("/level-4");
-    }, 2000);
+      router.push("/final-game");
+    }, 1600);
     return () => clearTimeout(t);
   }, [phase, router]);
   const twinkles = useMemo(
@@ -114,7 +114,10 @@ export default function CongratulationPage() {
                       setPhase("power");
                       setTimeout(() => {
                         if (typeof window !== "undefined" && window.__musicSet)
-                          window.__musicSet("s6oZ6LJeDws", 0);
+                          window.__musicSet(
+                            "/assets/music/congrats-clip.mp3",
+                            0
+                          );
                         if (typeof window !== "undefined" && window.__musicPlay)
                           window.__musicPlay();
                       }, 1800);

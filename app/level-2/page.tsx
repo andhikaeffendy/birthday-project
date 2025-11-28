@@ -65,7 +65,7 @@ export default function Level2Page() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      if (window.__musicSet) window.__musicSet("s6oZ6LJeDws", 522);
+      if (window.__musicSet) window.__musicSet("/assets/music/level2-clip.mp3", 0);
       if (window.__musicPlay) window.__musicPlay();
     }
   }, []);

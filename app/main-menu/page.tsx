@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TitleBox from "../components/TitleBox";
 import { ForestOverlay } from "../components/Ambience";
+import { useState } from "react";
 
 export default function MainMenu() {
   const router = useRouter();
+  const [soundOn, setSoundOn] = useState<boolean>(false);
   const handleStartGame = () => {
     if (typeof window !== "undefined" && window.__musicSet) {
-      window.__musicSet("FjHGZj2IjBk", 0);
+      window.__musicSet("/assets/music/mainmenu-clip.mp3", 0);
       if (window.__musicPlay) window.__musicPlay();
     }
     router.push("/level-1");
@@ -18,7 +20,14 @@ export default function MainMenu() {
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.__musicSet) {
-      window.__musicSet("FjHGZj2IjBk", 0);
+      const auto = localStorage.getItem("music:auto");
+      const preferOn = auto !== "off";
+      window.__musicSet("/assets/music/mainmenu-clip.mp3", 0);
+      if (preferOn) {
+        if (window.__musicPlay) window.__musicPlay();
+      } else {
+        if (window.__musicStop) window.__musicStop();
+      }
     }
   }, []);
 
@@ -56,17 +65,41 @@ export default function MainMenu() {
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 24px)" }}
         >
           <div className="flex items-center justify-between pr-6 pl-6">
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined" && window.__musicPlay) {
-                  window.__musicPlay();
-                }
-              }}
-              className="font-questTitle mt-6 px-5 py-2 rounded-2xl bg-[#F5D7A1] text-[#2A2A2A] border-[3px] border-[#2A2A2A] shadow-[0_6px_0_rgba(0,0,0,0.45)]"
-              style={{ width: "min(40vw, 160px)" }}
-            >
-              ENABLE SOUND
-            </button>
+            <div className="mt-6">
+              <div className="flex items-center gap-2">
+                <span className="font-questTitle text-xs text-white/90">
+                  Sound
+                </span>
+                <button
+                  onClick={() => {
+                    const next = !soundOn;
+                    setSoundOn(next);
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem("music:auto", next ? "on" : "off");
+                      if (next) {
+                        if (window.__musicPlay) window.__musicPlay();
+                      } else {
+                        if (window.__musicStop) window.__musicStop();
+                      }
+                    }
+                  }}
+                  aria-label="Toggle sound"
+                  suppressHydrationWarning
+                  className={`relative h-6 w-10 rounded-full border-[2px] transition-colors ${
+                    soundOn
+                      ? "bg-green-400 border-green-600"
+                      : "bg-gray-300 border-gray-500"
+                  }`}
+                >
+                  <span
+                    suppressHydrationWarning
+                    className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-white shadow ${
+                      soundOn ? "right-1" : "left-1"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
             <button
               onClick={handleStartGame}
               className="btn-cozy font-questTitle mt-6 px-10 py-2.5 text-xl rounded-2xl bg-[#C9E4A7] text-[#2A2A2A] border-[3px] border-[#2A2A2A] shadow-[0_6px_0_rgba(0,0,0,0.45)]"

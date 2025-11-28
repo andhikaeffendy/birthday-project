@@ -1,204 +1,460 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Level4Overlay } from "../components/Ambience";
-import { slides, heartsData, petalsData } from "../config/level4";
+
+type Mark = { x: number; y: number; kind: "ok" | "bad"; label?: string };
+type Rect = {
+  id: string;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
 
 export default function Level4Page() {
   const router = useRouter();
-  const [warmup, setWarmup] = useState(true);
+  const [bgSrc, setBgSrc] = useState<string>("/assets/background_level_4.png");
+  const [hearts, setHearts] = useState<number>(3);
+  const [wrongCount, setWrongCount] = useState<number>(0);
+  const [hint, setHint] = useState<boolean>(false);
+  const [marks, setMarks] = useState<Mark[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showDetail, setShowDetail] = useState<boolean>(false);
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [lastAction, setLastAction] = useState<"wrong" | "reset" | null>(null);
+  const prevHearts = useRef<number>(hearts);
+  const prevWrong = useRef<number>(wrongCount);
+  const [pulseOk, setPulseOk] = useState<string[]>([]);
+
+  const targets = useMemo<Rect[]>(
+    () => [
+      { id: "papan_cukil", left: 0, top: 62, width: 19, height: 15 },
+      { id: "gelang", left: 34, top: 16, width: 18, height: 8 },
+      { id: "buku", left: 26, top: 70, width: 40, height: 14 },
+    ],
+    []
+  );
+
   useEffect(() => {
-    const t = setTimeout(() => setWarmup(false), 900);
-    return () => clearTimeout(t);
+    if (typeof window !== "undefined") {
+      if (window.__musicSet)
+        window.__musicSet("/assets/music/level2-clip.mp3", 0);
+      if (window.__musicPlay) window.__musicPlay();
+    }
   }, []);
-  const [index, setIndex] = useState(0);
-  const current = slides[index];
 
-  const next = () => setIndex((i) => Math.min(i + 1, slides.length - 1));
-  const prev = () => setIndex((i) => Math.max(i - 1, 0));
+  useEffect(() => {
+    if (selectedIds.length === 3) {
+      const t = setTimeout(() => setShowDetail(true), 300);
+      return () => clearTimeout(t);
+    }
+  }, [selectedIds]);
 
-  const hearts = heartsData;
-  const petals = petalsData;
+  useEffect(() => {
+    prevHearts.current = hearts;
+  }, [hearts]);
 
-  const moodStyle = (m: string) => {
-    if (m === "golden")
-      return {
-        background:
-          "radial-gradient( circle at 50% 60%, rgba(255,210,120,0.25) 0%, rgba(0,0,0,0) 60% )",
-      } as React.CSSProperties;
-    if (m === "pink")
-      return {
-        background:
-          "radial-gradient( circle at 40% 70%, rgba(255,160,180,0.22) 0%, rgba(0,0,0,0) 60% )",
-      } as React.CSSProperties;
-    if (m === "twilight")
-      return {
-        background:
-          "radial-gradient( circle at 50% 30%, rgba(140,170,255,0.18) 0%, rgba(0,0,0,0) 60% )",
-      } as React.CSSProperties;
-    return {
-      background:
-        "radial-gradient( circle at 50% 65%, rgba(255,180,200,0.22) 0%, rgba(0,0,0,0) 60% )",
-    } as React.CSSProperties;
+  useEffect(() => {
+    prevWrong.current = wrongCount;
+  }, [wrongCount]);
+
+  const inRect = (xPct: number, yPct: number, r: Rect) => {
+    return (
+      xPct >= r.left &&
+      xPct <= r.left + r.width &&
+      yPct >= r.top &&
+      yPct <= r.top + r.height
+    );
   };
 
-  const boxStyle = (m: string) => {
-    if (m === "golden")
-      return {
-        background:
-          "linear-gradient(180deg, rgba(255,210,120,0.30), rgba(255,210,120,0.20))",
-        border: "1px solid rgba(255,210,120,0.55)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-      } as React.CSSProperties;
-    if (m === "pink")
-      return {
-        background:
-          "linear-gradient(180deg, rgba(255,160,180,0.28), rgba(255,160,180,0.18))",
-        border: "1px solid rgba(255,160,180,0.50)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-      } as React.CSSProperties;
-    if (m === "twilight")
-      return {
-        background:
-          "linear-gradient(180deg, rgba(140,170,255,0.24), rgba(140,170,255,0.16))",
-        border: "1px solid rgba(140,170,255,0.50)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-      } as React.CSSProperties;
-    return {
-      background:
-        "linear-gradient(180deg, rgba(255,180,200,0.28), rgba(255,180,200,0.18))",
-      border: "1px solid rgba(255,180,200,0.50)",
-      boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-    } as React.CSSProperties;
+  const findRect = (xPct: number, yPct: number): Rect | null => {
+    for (const r of targets) {
+      if (inRect(xPct, yPct, r)) return r;
+    }
+    return null;
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (showDetail || gameOver) return;
+    if (!wrapRef.current) return;
+    if (hearts <= 0) return;
+    const rect = wrapRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const hit = findRect(x, y);
+    if (hit) {
+      const anchorX =
+        hit.id === "papan_cukil"
+          ? hit.left + hit.width * 0.4
+          : hit.id === "gelang"
+          ? hit.left + hit.width * 0.52
+          : hit.left + hit.width * 0.5;
+      const anchorY =
+        hit.id === "papan_cukil"
+          ? hit.top + hit.height * 0.45
+          : hit.id === "gelang"
+          ? hit.top + hit.height * 0.35
+          : hit.top + hit.height * 0.5;
+      if (!selectedIds.includes(hit.id)) {
+        setSelectedIds((prev) => [...prev, hit.id]);
+        setMarks((prev) => [
+          ...prev,
+          { x: anchorX, y: anchorY, kind: "ok", label: hit.id },
+        ]);
+      } else {
+        setMarks((prev) => [
+          ...prev,
+          { x: anchorX, y: anchorY, kind: "ok", label: hit.id },
+        ]);
+      }
+    } else {
+      setMarks((prev) => [...prev, { x, y, kind: "bad" }]);
+      setWrongCount((w) => {
+        const next = w + 1;
+        if (next >= 3) {
+          setHearts(0);
+          setGameOver(true);
+        } else {
+          setHearts(() => Math.max(0, 3 - next));
+        }
+        setLastAction("wrong");
+        return next;
+      });
+    }
+  };
+
+  const resetGame = () => {
+    setHearts(3);
+    setWrongCount(0);
+    setHint(false);
+    setMarks([]);
+    setSelectedIds([]);
+    setShowDetail(false);
+    setGameOver(false);
+    setHearts(3);
+    setLastAction("reset");
   };
 
   return (
     <div
-      className="min-h-screen relative overflow-hidden"
+      className="min-h-screen bg-[#2D2D2D] flex items-center justify-center"
       style={{ minHeight: "100svh" }}
     >
-      <div className="absolute inset-0 -z-10">
-        <Image
-          src={current.background ?? "/assets/background_final.png"}
-          alt="Romantic Background"
-          fill
-          className={`object-cover ${current.kb ?? "kb-zoom"}`}
-          sizes="100vw"
-          priority
-          style={{ objectPosition: "center bottom" }}
-        />
-      </div>
-
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="tv-scanlines" />
-        <div className="tv-vignette" />
-        {warmup && <div className="tv-warmup" />}
-      </div>
-
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={moodStyle(current.mood)}
-      />
-
-      <Level4Overlay
-        currentId={current.id}
-        twinkles={current.twinkles}
-        hearts={current.hearts}
-        petals={current.petals}
-        rain={current.rain}
-        steam={current.steam}
-        sparkles={current.sparkles}
-        heartsData={hearts}
-        petalsData={petals}
-      />
-
-      <div
-        className="absolute inset-0 flex flex-col items-center justify-end"
-        style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
+        className="relative w-full max-w-7xl mx-auto"
+        style={{ height: "100svh" }}
       >
-        <div
-          key={index}
-          className="w-full max-w-[420px] px-4 mb-3 story-enter self-center"
-        >
+        <div className="bg-[#2D2D2D] h-full relative overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Image
+              src={bgSrc}
+              alt="Level 4 Background"
+              fill
+              className="object-cover"
+              sizes="100vw"
+              unoptimized
+              onError={() => setBgSrc("/assets/background_duduk.png")}
+            />
+          </div>
+
           <div
-            className="rounded-2xl p-3 shadow-xl border"
-            style={{
-              ...(boxStyle(current.mood) as React.CSSProperties),
-              backdropFilter:
-                current.boxBlur === "strong" ? "blur(14px)" : "blur(8px)",
-              backgroundColor: "rgba(0,0,0,0.18)",
-            }}
+            className="absolute left-1/2 -translate-x-1/2 z-20"
+            style={{ top: "max(env(safe-area-inset-top), 8px)" }}
           >
-            <p
-              className="font-questTitle text-[#2A2A2A] text-center"
-              style={{
-                fontSize: "clamp(14px, 4vw, 17px)",
-                lineHeight: "1.28",
-                color: current.textTone === "light" ? "#FFFFFF" : "#2A2A2A",
-                textShadow:
-                  current.textTone === "light"
-                    ? "0 1px 0 rgba(0,0,0,0.45)"
-                    : "0 1px 0 rgba(255,255,255,0.35)",
-              }}
-            >
-              {current.text}
-            </p>
-            <div className="mt-3 flex items-center justify-between">
+            <div className="pointer-events-none flex flex-col items-center gap-1.5">
+              <div className="bg-[#F5D7A1] px-4 py-1.5 rounded-2xl border-[6px] border-[#2A2A2A] shadow-xl animate-in-up">
+                <span
+                  className="font-black tracking-widest"
+                  style={{
+                    fontSize: "clamp(14px, 4.2vw, 22px)",
+                    backgroundImage:
+                      "linear-gradient(180deg, #2A2A2A 0%, #1C1C1C 100%)",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                  }}
+                >
+                  LEVEL 4
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div
+                  key={`try-${wrongCount}`}
+                  className={`bg-[#4A3A2A] border-[3px] sm:border-4 border-[#2D2018] px-2 py-0.5 rounded-xl shadow-xl animate-in-up ${
+                    lastAction === "wrong"
+                      ? "animate-wrong"
+                      : lastAction === "reset"
+                      ? "animate-correct"
+                      : ""
+                  }`}
+                >
+                  <span
+                    className="text-[#F5D7A1] font-black"
+                    style={{ fontSize: "clamp(10px, 2.6vw, 13px)" }}
+                  >
+                    TRY: {Math.max(0, 3 - wrongCount)}
+                  </span>
+                </div>
+                <div
+                  key={`hearts-${hearts}`}
+                  className={`bg-[#4A3A2A] border-[3px] sm:border-4 border-[#2D2018] px-2 py-0.5 rounded-xl shadow-xl animate-in-up ${
+                    lastAction === "wrong"
+                      ? "animate-wrong"
+                      : lastAction === "reset"
+                      ? "animate-correct"
+                      : ""
+                  }`}
+                >
+                  <span
+                    className="text-[#F5D7A1] font-black inline-flex items-center gap-1"
+                    style={{ fontSize: "clamp(10px, 2.6vw, 13px)" }}
+                  >
+                    <Heart
+                      size={12}
+                      className="text-red-500"
+                      fill="currentColor"
+                    />
+                    {hearts}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 z-20 w-full max-w-[480px] px-4"
+            style={{ bottom: "max(env(safe-area-inset-bottom), 16px)" }}
+          >
+            <div className="flex items-center justify-between">
               <button
-                onClick={prev}
-                disabled={index === 0}
-                className="h-9 w-9 rounded-full bg-black/40 text-white flex items-center justify-center shadow-md active:translate-y-px disabled:opacity-40"
+                onClick={() => setHint((v) => !v)}
+                className="btn-cozy shiny-btn bg-[#4A3A2A] border-4 border-[#2D2018] px-8 py-3 rounded-xl text-[#F5D7A1] font-black text-lg"
               >
-                ‹
+                HINT
               </button>
-              <span
-                className="font-questTitle"
+              <button
+                onClick={resetGame}
+                className="btn-cozy shiny-btn bg-[#D97706] border-4 border-[#6B3F1D] px-8 py-3 rounded-xl text-white font-black text-lg"
+              >
+                RESET
+              </button>
+            </div>
+          </div>
+
+          {hint && (
+            <div className="absolute inset-0 z-10 pointer-events-none">
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-28 w-full max-w-[520px] px-4">
+                <div
+                  className="rounded-2xl p-3 shadow-xl border"
+                  style={{
+                    background: "rgba(0,0,0,0.35)",
+                    borderColor: "rgba(255,210,120,0.5)",
+                  }}
+                >
+                  <p
+                    className="font-questTitle text-white text-center"
+                    style={{ fontSize: "clamp(14px, 4vw, 17px)" }}
+                  >
+                    barang yang sudah kita miliki dan kita coba lakuin bareng
+                  </p>
+                </div>
+              </div>
+              {targets.map((t) => (
+                <div
+                  key={t.id}
+                  className="absolute rounded-xl"
+                  style={{
+                    left: `${t.left}%`,
+                    top: `${t.top}%`,
+                    width: `${t.width}%`,
+                    height: `${t.height}%`,
+                    border: "2px dashed rgba(255,210,120,0.8)",
+                    boxShadow: "0 0 10px rgba(255,210,120,0.3)",
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          <div ref={wrapRef} className="absolute inset-0" onClick={handleClick}>
+            {targets.map((t) => (
+              <button
+                key={`btn-${t.id}`}
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  if (showDetail || gameOver) return;
+                  const x =
+                    t.id === "papan_cukil"
+                      ? t.left + t.width * 0.4
+                      : t.id === "gelang"
+                      ? t.left + t.width * 0.52
+                      : t.left + t.width * 0.5;
+                  const y =
+                    t.id === "papan_cukil"
+                      ? t.top + t.height * 0.45
+                      : t.id === "gelang"
+                      ? t.top + t.height * 0.35
+                      : t.top + t.height * 0.5;
+                  if (!selectedIds.includes(t.id)) {
+                    setSelectedIds((prev) => [...prev, t.id]);
+                  }
+                  setMarks((prev) => [
+                    ...prev,
+                    { x, y, kind: "ok", label: t.id },
+                  ]);
+                  setPulseOk((prev) => [...prev, t.id]);
+                  setTimeout(() => {
+                    setPulseOk((prev) => prev.filter((pid) => pid !== t.id));
+                  }, 900);
+                }}
+                className="absolute"
                 style={{
-                  fontSize: "12px",
-                  color: current.textTone === "light" ? "#FFFFFF" : "#2A2A2A",
-                  textShadow:
-                    current.textTone === "light"
-                      ? "0 1px 0 rgba(0,0,0,0.45)"
-                      : "0 1px 0 rgba(255,255,255,0.35)",
+                  left: `${t.left}%`,
+                  top: `${t.top}%`,
+                  width: `${t.width}%`,
+                  height: `${t.height}%`,
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+                aria-label={t.id}
+              />
+            ))}
+          </div>
+
+          <div className="absolute inset-0 pointer-events-none">
+            {pulseOk.map((id) => {
+              const t = targets.find((r) => r.id === id);
+              if (!t) return null;
+              return (
+                <div
+                  key={`okbox-${id}`}
+                  className="absolute rounded-xl animate-correct"
+                  style={{
+                    left: `${t.left}%`,
+                    top: `${t.top}%`,
+                    width: `${t.width}%`,
+                    height: `${t.height}%`,
+                    border: "2px solid rgba(34,197,94,0.8)",
+                    boxShadow: "0 0 12px rgba(34,197,94,0.45)",
+                  }}
+                >
+                  <div className="success-aura" />
+                </div>
+              );
+            })}
+            {marks.map((m, i) => (
+              <div
+                key={`m-${i}`}
+                className="absolute"
+                style={{
+                  left: `${m.x}%`,
+                  top: `${m.y}%`,
+                  transform: "translate(-50%, -50%)",
                 }}
               >
-                {index + 1} / {slides.length}
-              </span>
-              {index < slides.length - 1 ? (
-                <button
-                  onClick={next}
-                  className="h-9 w-9 rounded-full bg-black/40 text-white flex items-center justify-center shadow-md active:translate-y-px"
+                <span
+                  className={`${
+                    m.kind === "ok"
+                      ? "text-green-500 animate-correct"
+                      : "text-red-500 animate-wrong"
+                  }`}
+                  style={{
+                    fontSize: "28px",
+                    textShadow: "0 0 8px rgba(0,0,0,0.45)",
+                    fontWeight: 900,
+                  }}
                 >
-                  ›
-                </button>
-              ) : (
-                <button
-                  onClick={() => router.push("/congratulation")}
-                  className="font-questTitle px-6 py-2 rounded-xl bg-[#2FA84F] text-white border-[3px] border-[#1D6131] shadow-[0_4px_0_rgba(0,0,0,0.35)] active:translate-y-px"
-                >
-                  FINISH
-                </button>
-              )}
-            </div>
+                  {m.kind === "ok" ? "✓" : "✕"}
+                </span>
+                {m.kind === "ok" && <div className="success-aura" />}
+              </div>
+            ))}
           </div>
-        </div>
 
-        {index === slides.length - 1 && (
-          <div className="w-full max-w-[420px] px-4">
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={() => router.push("/main-menu")}
-                className="font-questTitle px-6 py-2 rounded-2xl bg-amber-300 text-slate-900 border-[3px] border-amber-600 shadow-[0_6px_0_rgba(0,0,0,0.45)] active:translate-y-[2px]"
-              >
-                MENU
-              </button>
+          {showDetail && (
+            <div
+              className="absolute inset-0 flex items-center justify-end"
+              style={{
+                paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+              }}
+            >
+              <div className="w-full max-w-[420px] px-4 mb-3">
+                <div className="bg-[#FFE8C8] py-4 px-5 rounded-2xl border-[6px] border-[#2A2A2A] shadow-xl text-center animate-in-up">
+                  <h2
+                    className="font-questTitle text-[#2A2A2A]"
+                    style={{ fontSize: "clamp(16px, 4.6vw, 20px)" }}
+                  >
+                    Pilihan benar:
+                  </h2>
+                  <div className="mt-2">
+                    {selectedIds.map((id) => (
+                      <div key={id} className="mt-1">
+                        <span
+                          className="font-black text-[#2A2A2A]"
+                          style={{ fontSize: "15px" }}
+                        >
+                          {id === "papan_cukil"
+                            ? "papan cukil"
+                            : id === "gelang"
+                            ? "gelang couple"
+                            : "buku/jurnal"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex items-center gap-4 justify-center">
+                    <button
+                      onClick={() => router.push("/congratulation")}
+                      className="bg-[#2FA84F] border-4 border-[#1D6131] px-10 py-3 rounded-xl text-white font-black text-lg"
+                    >
+                      NEXT
+                    </button>
+                    <button
+                      onClick={resetGame}
+                      className="bg-[#D97706] border-4 border-[#6B3F1D] px-10 py-3 rounded-xl text-white font-black text-lg"
+                    >
+                      REPLAY
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {gameOver && (
+            <div
+              className="absolute inset-0 flex items-center justify-end"
+              style={{
+                paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+              }}
+            >
+              <div className="w-full max-w-[420px] px-4 mb-3">
+                <div className="bg-red-50 py-4 px-5 rounded-2xl border-[6px] border-red-600 shadow-xl text-center animate-in-up">
+                  <h2
+                    className="font-questTitle text-red-800"
+                    style={{ fontSize: "clamp(16px, 4.6vw, 20px)" }}
+                  >
+                    Game Over — Try Again
+                  </h2>
+                  <div className="mt-3 flex items-center gap-4 justify-center">
+                    <button
+                      onClick={resetGame}
+                      className="bg-[#D97706] border-4 border-[#6B3F1D] px-10 py-3 rounded-xl text-white font-black text-lg"
+                    >
+                      TRY AGAIN
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-      {warmup && <div className="enter-curtain" />}
     </div>
   );
 }

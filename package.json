@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:audio": "node scripts/check-audio.mjs",
+    "test:music": "node scripts/check-music-pages.mjs",
+    "test:e2e": "node scripts/e2e-source.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.554.0",

@@ -2,12 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { HelpCircle, Puzzle, Plus, Play } from "lucide-react";
+import { useEffect } from "react";
 
 export default function GameIntro() {
   const router = useRouter();
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.__musicSet) {
+      window.__musicSet("/assets/music/mainmenu-clip.mp3", 0);
+      if (window.__musicPlay) window.__musicPlay();
+    }
+  }, []);
 
   const handleStartGame = () => {
-    router.push("/game/level1");
+    router.push("/level-1");
   };
 
   return (

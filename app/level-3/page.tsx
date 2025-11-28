@@ -172,7 +172,7 @@ function Level3Inner() {
           style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
         >
           <button
-            onClick={() => router.push("/congratulation")}
+            onClick={() => router.push("/level-4")}
             className="bg-[#2FA84F] border-4 border-[#1D6131] px-10 py-4 rounded-xl text-white font-black text-lg"
           >
             NEXT
@@ -284,7 +284,7 @@ function Level3Inner() {
 export default function Level3Page() {
   useEffect(() => {
     if (typeof window !== "undefined" && window.__musicSet) {
-      window.__musicSet("s6oZ6LJeDws", 3770);
+      window.__musicSet("/assets/music/level3-clip.mp3", 0);
       if (window.__musicPlay) window.__musicPlay();
     }
   }, []);
