@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+import BlockingImage from "../components/BlockingImage";
 import { useRouter } from "next/navigation";
 import { Level4Overlay } from "../components/Ambience";
 import { slides, heartsData, petalsData } from "../config/level4";
@@ -23,6 +24,7 @@ export default function FinalGamePage() {
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       tvWarmRef.current?.removeEventListener("animationend", end);
       curtainRef.current?.removeEventListener("animationend", end);
       window.removeEventListener("pointerdown", pointer);
@@ -34,6 +36,14 @@ export default function FinalGamePage() {
 
   const next = () => setIndex((i) => Math.min(i + 1, slides.length - 1));
   const prev = () => setIndex((i) => Math.max(i - 1, 0));
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      slides.forEach((s) => {
+        const img = new window.Image();
+        img.src = s.background;
+      });
+    }
+  }, []);
 
   const hearts = heartsData;
   const petals = petalsData;
@@ -95,16 +105,16 @@ export default function FinalGamePage() {
       className="min-h-screen relative overflow-hidden"
       style={{ minHeight: "100svh" }}
     >
-      <div className="absolute inset-0 -z-10">
-        <Image
-          src={current.background ?? "/assets/background_final.png"}
-          alt="Romantic Background"
-          fill
-          className={`object-cover ${current.kb ?? "kb-zoom"}`}
-          sizes="100vw"
-          style={{ objectPosition: "center bottom" }}
-        />
-      </div>
+      <BlockingImage
+        containerClassName="absolute inset-0 -z-10"
+        src={current.background ?? "/assets/background_final.png"}
+        alt="Romantic Background"
+        fill
+        className={`object-cover ${current.kb ?? "kb-zoom"}`}
+        sizes="100vw"
+        style={{ objectPosition: "center bottom" }}
+        priority
+      />
 
       <div className="absolute inset-0 pointer-events-none">
         <div className="tv-scanlines" />

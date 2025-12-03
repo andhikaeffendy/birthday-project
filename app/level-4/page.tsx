@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import BlockingImage from "../components/BlockingImage";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -16,7 +16,7 @@ type Rect = {
 
 export default function Level4Page() {
   const router = useRouter();
-  const [bgSrc, setBgSrc] = useState<string>("/assets/background_level_4.png");
+  const bgSrc = "/assets/background_level_4.png";
   const [hearts, setHearts] = useState<number>(3);
   const [wrongCount, setWrongCount] = useState<number>(0);
   const [hint, setHint] = useState<boolean>(false);
@@ -40,6 +40,12 @@ export default function Level4Page() {
       if (window.__musicSet)
         window.__musicSet("/assets/music/level2-clip.mp3", 0);
       if (window.__musicPlay) window.__musicPlay();
+    }
+    if (typeof window !== "undefined") {
+      const a = new window.Image();
+      a.src = "/assets/background_gift.png";
+      const b = new window.Image();
+      b.src = "/assets/background_final.png";
     }
   }, []);
 
@@ -136,17 +142,16 @@ export default function Level4Page() {
         style={{ height: "100svh" }}
       >
         <div className="bg-[#2D2D2D] h-full relative overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Image
-              src={bgSrc}
-              alt="Level 4 Background"
-              fill
-              className="object-cover bg-parallax"
-              sizes="100vw"
-              unoptimized
-              onError={() => setBgSrc("/assets/background_duduk.png")}
-            />
-          </div>
+          <BlockingImage
+            containerClassName="absolute inset-0 flex items-center justify-center"
+            src={bgSrc}
+            alt="Level 4 Background"
+            fill
+            className="object-cover bg-parallax"
+            sizes="100vw"
+            priority
+            onErrorSrc="/assets/background_duduk.png"
+          />
 
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
             <div className="bg-[#F5D7A1] px-4 py-1.5 rounded-2xl border-[6px] border-[#2A2A2A] shadow-xl flex items-center gap-3">

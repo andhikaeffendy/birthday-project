@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import BlockingImage from "../components/BlockingImage";
 import { BeachOverlay } from "../components/Ambience";
 import { useEffect } from "react";
 import { useState } from "react";
@@ -20,6 +20,16 @@ export default function Level1Page() {
       if (window.__musicSet)
         window.__musicSet("/assets/music/level1-clip.mp3", 0);
       if (window.__musicPlay) window.__musicPlay();
+    }
+    if (typeof window !== "undefined") {
+      const bg = new window.Image();
+      bg.src = "/assets/bg_level_2.png";
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+          const img = new window.Image();
+          img.src = `/assets/jig_${row}_${col}.png`;
+        }
+      }
     }
   }, []);
 
@@ -66,16 +76,15 @@ export default function Level1Page() {
         style={{ height: "100svh" }}
       >
         <div className="bg-[#2D2D2D] h-full relative overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Image
-              src="/assets/background_level_1.png"
-              alt="Level 1 Background"
-              fill
-              className="object-cover bg-parallax"
-              priority
-              sizes="100vw"
-            />
-          </div>
+          <BlockingImage
+            containerClassName="absolute inset-0 flex items-center justify-center"
+            src="/assets/background_level_1.png"
+            alt="Level 1 Background"
+            fill
+            className="object-cover bg-parallax"
+            priority
+            sizes="100vw"
+          />
           <BeachOverlay />
 
           <div className="absolute inset-0 pointer-events-none">

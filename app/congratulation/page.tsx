@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import BlockingImage from "../components/BlockingImage";
 
 export default function CongratulationPage() {
   const router = useRouter();
@@ -10,6 +10,10 @@ export default function CongratulationPage() {
   useEffect(() => {
     if (typeof window !== "undefined" && window.__musicStop) {
       window.__musicStop();
+    }
+    if (typeof window !== "undefined") {
+      const img = new window.Image();
+      img.src = "/assets/background_final.png";
     }
   }, []);
   useEffect(() => {
@@ -44,16 +48,15 @@ export default function CongratulationPage() {
       className="min-h-screen relative overflow-hidden"
       style={{ minHeight: "100svh" }}
     >
-      <div className="absolute inset-0 -z-10">
-        <Image
-          src="/assets/background_gift.png"
-          alt="Gift Background"
-          fill
-          className="object-cover"
-          sizes="100vw"
-          priority
-        />
-      </div>
+      <BlockingImage
+        containerClassName="absolute inset-0 -z-10"
+        src="/assets/background_gift.png"
+        alt="Gift Background"
+        fill
+        className="object-cover"
+        sizes="100vw"
+        priority
+      />
 
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 romance-glow" />
@@ -96,7 +99,7 @@ export default function CongratulationPage() {
                   lineHeight: "1.06",
                 }}
               >
-                Happy Birthday
+                Happy Birthday Sweet heart
               </h1>
               <p
                 className="mt-1 text-[#2A2A2A]/80 font-questTitle"
@@ -127,7 +130,7 @@ export default function CongratulationPage() {
                   className="shiny-btn font-questTitle px-10 py-3 text-xl rounded-2xl bg-amber-300 text-[#2A2A2A] border-[3px] border-amber-600 shadow-[0_6px_0_rgba(0,0,0,0.45)] active:translate-y-[2px] disabled:opacity-90"
                   style={{ width: "min(80vw, 300px)" }}
                 >
-                  open ur gift
+                  Click Me
                 </button>
               </div>
             </div>

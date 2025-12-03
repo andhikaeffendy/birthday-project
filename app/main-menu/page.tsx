@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import BlockingImage from "../components/BlockingImage";
 import TitleBox from "../components/TitleBox";
 import { ForestOverlay } from "../components/Ambience";
 import { useState } from "react";
@@ -29,6 +29,17 @@ export default function MainMenu() {
         if (window.__musicStop) window.__musicStop();
       }
     }
+    if (typeof window !== "undefined") {
+      const urls = [
+        "/assets/background_level_1.png",
+        "/assets/bg_level_2.png",
+        "/assets/background_level_3.png",
+      ];
+      urls.forEach((u) => {
+        const img = new window.Image();
+        img.src = u;
+      });
+    }
   }, []);
 
   return (
@@ -36,17 +47,16 @@ export default function MainMenu() {
       className="min-h-screen relative overflow-hidden"
       style={{ minHeight: "100svh" }}
     >
-      <div className="absolute inset-0 -z-10">
-        <Image
-          src="/assets/background_main.png"
-          alt="Main Menu Background"
-          fill
-          className="object-cover bg-parallax"
-          sizes="100vw"
-          priority
-          style={{ objectPosition: "center bottom" }}
-        />
-      </div>
+      <BlockingImage
+        containerClassName="absolute inset-0 -z-10"
+        src="/assets/background_main.png"
+        alt="Main Menu Background"
+        fill
+        className="object-cover bg-parallax"
+        sizes="100vw"
+        priority
+        style={{ objectPosition: "center bottom" }}
+      />
 
       <ForestOverlay />
 

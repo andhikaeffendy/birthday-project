@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import BlockingImage from "../components/BlockingImage";
 import { NightOverlay } from "../components/Ambience";
 
 interface PuzzlePiece {
@@ -65,8 +66,13 @@ export default function Level2Page() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      if (window.__musicSet) window.__musicSet("/assets/music/level2-clip.mp3", 0);
+      if (window.__musicSet)
+        window.__musicSet("/assets/music/level2-clip.mp3", 0);
       if (window.__musicPlay) window.__musicPlay();
+    }
+    if (typeof window !== "undefined") {
+      const img = new window.Image();
+      img.src = "/assets/background_level_3.png";
     }
   }, []);
 
@@ -133,17 +139,15 @@ export default function Level2Page() {
       className="min-h-screen relative overflow-hidden bg-[#2D2D2D]"
       style={{ minHeight: "100svh" }}
     >
-      <div className="absolute inset-0">
-        <Image
-          src="/assets/bg_level_2.png"
-          alt="Level 2 Background"
-          fill
-          className="object-cover bg-parallax"
-          priority
-          unoptimized
-          sizes="100vw"
-        />
-      </div>
+      <BlockingImage
+        containerClassName="absolute inset-0"
+        src="/assets/bg_level_2.png"
+        alt="Level 2 Background"
+        fill
+        className="object-cover bg-parallax"
+        priority
+        sizes="100vw"
+      />
       <NightOverlay />
 
       {isComplete ? (
@@ -219,7 +223,8 @@ export default function Level2Page() {
                 alt="Hint"
                 fill
                 className="object-contain opacity-20"
-                unoptimized
+                placeholder="blur"
+                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMScgaGVpZ2h0PScxJyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnPjxyZWN0IHdpZHRoPScxJyBoZWlnaHQ9JzEnIGZpbGw9JyMxMTEzMTMnIC8+PC9zdmc+"
               />
             )}
             <div className="absolute inset-0 pointer-events-none">
@@ -241,7 +246,8 @@ export default function Level2Page() {
                       alt={`Piece ${piece.id}`}
                       fill
                       className="object-cover"
-                      unoptimized
+                      placeholder="blur"
+                      blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMScgaGVpZ2h0PScxJyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnPjxyZWN0IHdpZHRoPScxJyBoZWlnaHQ9JzEnIGZpbGw9JyMxMTEzMTMnIC8+PC9zdmc+"
                       style={{
                         transform: `rotate(${piece.angle ?? 0}deg)`,
                         transformOrigin: "50% 50%",
@@ -262,7 +268,8 @@ export default function Level2Page() {
                   width={80}
                   height={80}
                   className="object-cover w-full h-full"
-                  unoptimized
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMScgaGVpZ2h0PScxJyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnPjxyZWN0IHdpZHRoPScxJyBoZWlnaHQ9JzEnIGZpbGw9JyMxMTEzMTMnIC8+PC9zdmc+"
                 />
               </div>
               <div className="col-span-1 flex justify-center">

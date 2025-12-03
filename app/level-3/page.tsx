@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import BlockingImage from "../components/BlockingImage";
 import { useEffect } from "react";
 
 function Level3Inner() {
@@ -89,32 +89,31 @@ function Level3Inner() {
       className="min-h-screen relative overflow-hidden"
       style={{ minHeight: "100svh" }}
     >
-      <div className="absolute inset-0 -z-10">
-        <Image
-          src="/assets/background_level_3.png"
-          alt="Level 3 Background"
-          fill
-          className="object-cover dungeon-pan"
-          unoptimized
-        />
-        <div className="absolute inset-0 pointer-events-none dungeon-flicker" />
-        <div className="top-banner-mask" />
-        <div className="absolute inset-0 pointer-events-none">
-          {embers.map((p, i) => (
-            <div
-              key={`ember-${i}`}
-              className="ember absolute"
-              style={{
-                left: `${p.left}%`,
-                bottom: "-8px",
-                width: `${p.size}px`,
-                height: `${p.size}px`,
-                animationDuration: `${p.duration}s`,
-                animationDelay: `${p.delay}s`,
-              }}
-            />
-          ))}
-        </div>
+      <BlockingImage
+        containerClassName="absolute inset-0 -z-10"
+        src="/assets/background_level_3.png"
+        alt="Level 3 Background"
+        fill
+        className="object-cover dungeon-pan"
+        priority
+      />
+      <div className="absolute inset-0 pointer-events-none dungeon-flicker" />
+      <div className="top-banner-mask" />
+      <div className="absolute inset-0 pointer-events-none">
+        {embers.map((p, i) => (
+          <div
+            key={`ember-${i}`}
+            className="ember absolute"
+            style={{
+              left: `${p.left}%`,
+              bottom: "-8px",
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              animationDuration: `${p.duration}s`,
+              animationDelay: `${p.delay}s`,
+            }}
+          />
+        ))}
       </div>
 
       <div className="absolute inset-0 pointer-events-none z-5">
@@ -286,6 +285,12 @@ export default function Level3Page() {
     if (typeof window !== "undefined" && window.__musicSet) {
       window.__musicSet("/assets/music/level3-clip.mp3", 0);
       if (window.__musicPlay) window.__musicPlay();
+    }
+    if (typeof window !== "undefined") {
+      const a = new window.Image();
+      a.src = "/assets/background_level_4.png";
+      const b = new window.Image();
+      b.src = "/assets/background_duduk.png";
     }
   }, []);
   return (
